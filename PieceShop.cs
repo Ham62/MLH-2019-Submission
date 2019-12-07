@@ -49,9 +49,11 @@ namespace FBGFXDemo
 			shopItems[6].item = new Piece("queen.png",15,owner,MOVEMODE.QUEEN);
 			shopItems[EXIT].item = new Piece("",0,null,MOVEMODE.NONE);
 			shopItems[BUY].item = new Piece("", 0, null, MOVEMODE.NONE);
-			updateMenuImage();
 
-			
+			updateMenuImage();
+			shopItems[EXIT].button.clickedAction = exitFunction;
+
+
 		}
 
 		private void updateMenuImage()
@@ -99,10 +101,12 @@ namespace FBGFXDemo
 			}
 		}
 
-        public override void pieceFunction(GameBoard board)
+		GameBoard tempBoard;
+        public override void pieceFunction(GameBoard board, )
         {
+			tempBoard = board;
 			isShowing = true;
-			board.enableBoard(false);
+			tempBoard.enableBoard(false);
 			show();
 
         }
@@ -120,6 +124,8 @@ namespace FBGFXDemo
 			{
 				WindowControls.Unregister(shopItems[i].button);
 			}
+
+			tempBoard.enableBoard(true);
 		}
     }
 }
