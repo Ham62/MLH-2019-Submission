@@ -102,9 +102,11 @@ namespace FBGFXDemo
 		}
 
 		GameBoard tempBoard;
-        public override void pieceFunction(GameBoard board, )
+        Tile tempTile;
+        public override void pieceFunction(GameBoard board, Tile owner)
         {
 			tempBoard = board;
+            tempTile = owner;
 			isShowing = true;
 			tempBoard.enableBoard(false);
 			show();
@@ -126,6 +128,9 @@ namespace FBGFXDemo
 			}
 
 			tempBoard.enableBoard(true);
+            tempBoard.clearMoveflags();
+            tempBoard.selectedTile = null;
+            tempTile.isSelected = false;
 		}
     }
 }
