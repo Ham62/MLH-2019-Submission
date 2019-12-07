@@ -5,7 +5,7 @@ using System.Text;
 
 namespace FBGFXDemo
 {
-	abstract class Piece
+	class Piece
 	{
 		public enum MOVEMODE
 		{
@@ -32,62 +32,50 @@ namespace FBGFXDemo
 
 		public Player owner { get; set; }
         public int cost { get; set; }
-        public Pos position { get; set; }
-        String imgPath = "";
+        public readonly String imgPath = "";
         private MOVEMODE moveMode;
 
 
 
-        public Piece(String imgPath, int cost, Pos xy, Player owner, MOVEMODE moveMode)
+        public Piece(String imgPath, int cost, Player owner, MOVEMODE moveMode)
         {
             this.imgPath = imgPath;
             this.cost = cost;
-            this.position = xy;
             this.owner = owner;
             this.moveMode = moveMode;
         }
 
-        //default function to move to given x, y. When calling this function you determine the possible moves based off of movePath
-        public Boolean move(GameBoard board,int newX, int newY)
+
+        public virtual void pieceFunction(GameBoard board, Tile owner)
         {
-            if(newX < board.width && newX >= 0 && newY <= board.width && newY >=0)
-            {
-                position.x = newX;
-                position.y = newY;
-
-                board.tileAt(newX, newY).invade(this);//updates the tile(handles piece moving ex remove old updating tile)
-
-                return true;
-            }
-            return false;
-        }
-
-
-        public virtual void pieceFunction(GameBoard board)
-        {
-			//highlight posible moves(calling button.highlight)
-			//prompt user to click on possible piece(clicking on tile returns position)
-			//if possible piece, move piece
-			//moving this piece will call a made up function "invade" what handles updating the tile
-			/*
-             1.hight possible moves
-             2.prompt user for click
-             3.if possible move piece
-             */
-			showPossibleMoves(board);
+            Pos coord = board.getCoord(owner);
+			showPossibleMoves(board, coord);
 
         }
 
 		//private helper used to show possible moves, checks to see if new move is valid, if so set that valid tile to canMove
-        private void possibleMove(GameBoard board, int plusX, int plusY)
+        // returns false if we hit a piece going that direction and can't move past
+        private bool possibleMove(GameBoard board, Pos position, int plusX, int plusY)
         {
-            Pos newPosition = board.tileAt(position.x+plusX, position.y + plusY).piece.position;
-            if (newPosition != null)//newPosition is set to null
-                board.tileAt(newPosition.x, newPosition.y).canMove = true;
+            Tile tile = board.tileAt(position.x + plusX, position.y + plusY);
+            if (tile != null)
+            {
+                if (tile.piece != null)
+                {
+                    // If it's not your piece you can take it over, otherwise can't move there
+                    if (tile.piece.owner != owner)
+                        tile.canMove = true;
+
+                    return false;
+                }
+               tile.canMove = true;
+               return true;
+            }
+            return false;
         }
 
         //hard coded for now, change back to "plus" array for each piece, then loop thru arr
-        private void showPossibleMoves(GameBoard board)
+        private void showPossibleMoves(GameBoard board, Pos pos)
         {
 			if(moveMode <= MOVEMODE.KING)
 			{
@@ -95,31 +83,40 @@ namespace FBGFXDemo
 				{
 					int plusX = MOVE_LIST[(int)moveMode][i].x;
 					int plusY = MOVE_LIST[(int)moveMode][i].y;
-					possibleMove(board, plusX, plusY);
+					possibleMove(board, pos, plusX, plusY);
 				}
 			}
 			else//else piece is "special" global moving piece 2 ifs because queen = bishop+rook
 			{
 				if(moveMode == MOVEMODE.BISHOP || moveMode == MOVEMODE.QUEEN)
 				{
-					for(int i =1; i <= (board.width+board.height)/2;i++)
+                    bool[] moves = { true, true, true, true };
+                    for (int i = 1; i <= (board.TILES_WIDE + board.TILES_HIGH) / 2; i++)
 					{
-						possibleMove(board, i, i);
-						possibleMove(board, -i, -i);
-						possibleMove(board, -i, i);
-						possibleMove(board, i, -i);
+                        if (moves[0])
+                            moves[0] = possibleMove(board, pos, i, i);
+                        if (moves[1])
+                            moves[1] = possibleMove(board, pos, -i, -i);
+                        if (moves[2])
+                            moves[2] = possibleMove(board, pos, -i, i);
+                        if (moves[3])
+                            moves[3] = possibleMove(board, pos, i, -i);
 					}
 				}
 
 				if(moveMode == MOVEMODE.ROOK || moveMode == MOVEMODE.QUEEN)
 				{
-					for (int i = 1; i <= (board.width + board.height) / 2; i++)
+                    bool[] moves = { true, true, true, true };
+                    for (int i = 1; i <= (board.TILES_WIDE + board.TILES_HIGH) / 2; i++)
 					{
-						possibleMove(board, 0, i);
-						possibleMove(board, 0, -i);
-						possibleMove(board, -i, 0);
-						possibleMove(board, i, -0);
-
+                        if (moves[0])
+                            moves[0] = possibleMove(board, pos, 0, i);
+                        if (moves[1])
+                            moves[1] = possibleMove(board, pos, 0, -i);
+                        if (moves[2])
+                            moves[2] = possibleMove(board, pos, -i, 0);
+                        if (moves[3])
+                            moves[3] = possibleMove(board, pos, i, 0);
 					}
 				}
 			}
